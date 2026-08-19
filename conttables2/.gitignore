@@ -13,3 +13,6 @@
 dist
 build
 tests/testthat/*.pdf
+
+# compiled from jamovi/i18n/*.po by jmc at build time
+inst/i18n
