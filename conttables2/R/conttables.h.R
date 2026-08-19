@@ -831,25 +831,35 @@ contTablesBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' @param phiCra \code{TRUE} or \code{FALSE} (default), provide Phi and
 #'   Cramer's V
 #' @param diffProp \code{TRUE} or \code{FALSE} (default), provide the
-#'   differences in proportions (only available for 2xK tables; each
-#'   non-reference category of the compared variable vs. a reference category)
+#'   differences in proportions (only available for 2xK tables: the variable
+#'   selected by \code{compare} must have exactly two categories; each
+#'   non-reference category of the other variable (rows/cols) is contrasted
+#'   against a reference category (its first level))
 #' @param logOdds \code{TRUE} or \code{FALSE} (default), provide the log odds
-#'   ratio (only available for 2xK tables; each non-reference category of the
-#'   compared variable vs. a reference category)
+#'   ratio (only available for 2xK tables: the variable selected by
+#'   \code{compare} must have exactly two categories; each non-reference
+#'   category of the other variable (rows/cols) is contrasted against a
+#'   reference category (its first level))
 #' @param odds \code{TRUE} or \code{FALSE} (default), provide the odds ratio
-#'   (only available for 2xK tables; each non-reference category of the compared
-#'   variable vs. a reference category)
+#'   (only available for 2xK tables: the variable selected by \code{compare}
+#'   must have exactly two categories; each non-reference category of the other
+#'   variable (rows/cols) is contrasted against a reference category (its first
+#'   level))
 #' @param relRisk \code{TRUE} or \code{FALSE} (default), provide the relative
-#'   risk (only available for 2xK tables; each non-reference category of the
-#'   compared variable vs. a reference category)
+#'   risk (only available for 2xK tables: the variable selected by
+#'   \code{compare} must have exactly two categories; each non-reference
+#'   category of the other variable (rows/cols) is contrasted against a
+#'   reference category (its first level))
 #' @param ci \code{TRUE} or \code{FALSE} (default), provide confidence
 #'   intervals for the comparative measures
 #' @param ciWidth a number between 50 and 99.9 (default: 95), width of the
 #'   confidence intervals to provide
-#' @param compare \code{columns} or \code{rows} (default), which variable to
-#'   compare in the comparative measures (2xK tables): the compared variable
-#'   must have 2 or more categories, and the other variable (rows/cols) must
-#'   have exactly two categories
+#' @param compare \code{columns} or \code{rows} (default), which variable's
+#'   two categories to use as the compared groups in the comparative measures
+#'   (2xK tables); the selected variable must have exactly two categories. The
+#'   other variable's categories (any number, K >= 2) are each contrasted,
+#'   against a reference category (its first level), between the two compared
+#'   groups
 #' @param hypothesis \code{'different'} (default), \code{'oneGreater'} or
 #'   \code{'twoGreater'}, the alternative hypothesis; group 1 different to group
 #'   2, group 1 greater than group 2, and group 2 greater than group 1

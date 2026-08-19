@@ -776,10 +776,10 @@ msgid "Available for 2x2 tables only"
 msgstr "Disponible només per a taules 2x2"
 
 #: R/conttables.b.R
-msgid "Available for 2xK tables only (the variable not being compared must have exactly two categories)"
+msgid "Available for 2xK tables only (the variable selected by Compare must have exactly two categories)"
 msgstr ""
-"Disponible només per a taules 2xK (la variable que no es compara ha de "
-"tenir exactament dues categories)"
+"Disponible només per a taules 2xK (la variable seleccionada a Comparar ha "
+"de tenir exactament dues categories)"
 
 #: propTest2/ui[2][0][0]/priorB.label
 msgid "b parameter"

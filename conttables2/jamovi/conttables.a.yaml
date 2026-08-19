@@ -194,8 +194,9 @@ options:
       description:
           R: >
             `TRUE` or `FALSE` (default), provide the differences in proportions (only available
-            for 2xK tables; each non-reference category of the compared variable vs. a reference
-            category)
+            for 2xK tables: the variable selected by `compare` must have exactly two categories;
+            each non-reference category of the other variable (rows/cols) is contrasted against a
+            reference category (its first level))
 
     - name: logOdds
       title: Log odds ratio
@@ -204,8 +205,9 @@ options:
       description:
           R: >
             `TRUE` or `FALSE` (default), provide the log odds ratio (only available
-            for 2xK tables; each non-reference category of the compared variable vs. a reference
-            category)
+            for 2xK tables: the variable selected by `compare` must have exactly two categories;
+            each non-reference category of the other variable (rows/cols) is contrasted against a
+            reference category (its first level))
 
     - name: odds
       title: Odds ratio
@@ -214,8 +216,9 @@ options:
       description:
           R: >
             `TRUE` or `FALSE` (default), provide the odds ratio (only available
-            for 2xK tables; each non-reference category of the compared variable vs. a reference
-            category)
+            for 2xK tables: the variable selected by `compare` must have exactly two categories;
+            each non-reference category of the other variable (rows/cols) is contrasted against a
+            reference category (its first level))
 
     - name: relRisk
       title: Relative risk
@@ -224,8 +227,9 @@ options:
       description:
           R: >
             `TRUE` or `FALSE` (default), provide the relative risk (only available
-            for 2xK tables; each non-reference category of the compared variable vs. a reference
-            category)
+            for 2xK tables: the variable selected by `compare` must have exactly two categories;
+            each non-reference category of the other variable (rows/cols) is contrasted against a
+            reference category (its first level))
 
     - name: ci
       title: Confidence intervals
@@ -258,9 +262,11 @@ options:
       default: rows
       description:
           R: >
-            `columns` or `rows` (default), which variable to compare in the comparative
-            measures (2xK tables): the compared variable must have 2 or more categories, and the
-            other variable (rows/cols) must have exactly two categories
+            `columns` or `rows` (default), which variable's two categories to use as the compared
+            groups in the comparative measures (2xK tables); the selected variable must have
+            exactly two categories. The other variable's categories (any number, K >= 2) are each
+            contrasted, against a reference category (its first level), between the two compared
+            groups
 
     - name: hypothesis
       title: Alternative hypothesis

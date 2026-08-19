@@ -64,9 +64,9 @@ contTablesClass <- R6::R6Class(
 
             # the comparative measures (odds) table gets one extra column
             # identifying the compared category (2xK: each non-reference
-            # category of the group variable vs. a reference category)
+            # category of the iterated variable vs. a reference category)
             oddsInfo <- private$.oddsInfo(data)
-            groupTitle <- if ( ! is.null(oddsInfo$groupVarName)) oddsInfo$groupVarName else '.'
+            groupTitle <- if ( ! is.null(oddsInfo$iterateVarName)) oddsInfo$iterateVarName else '.'
             odds$addColumn(index=length(layerNames) + 1, name=groupTitle, title=groupTitle, type='text')
 
             # add the row column, containing the row variable
@@ -242,7 +242,7 @@ contTablesClass <- R6::R6Class(
             # non-reference group level, or one placeholder row per layer
             # combo when the table isn't a 2xK table (see .oddsInfo())
 
-            compareLevels <- if (oddsInfo$available) oddsInfo$groupLevels[-1] else '.'
+            compareLevels <- if (oddsInfo$available) oddsInfo$iterateLevels[-1] else '.'
 
             groupValue <- function(level) {
                 v <- list()
@@ -363,12 +363,12 @@ contTablesClass <- R6::R6Class(
 
             ciWidth <- self$options$ciWidth / 100
 
-            # 2xK comparative measures: which axis is compared (>=2 levels),
-            # which is the fixed outcome (must be exactly 2 levels), and the
-            # non-reference categories to contrast against the reference
-            # (the first level of the compared variable)
+            # 2xK comparative measures: `compare` selects the two compared
+            # groups (must be exactly 2 levels); the other, iterated variable
+            # can have K >= 2 categories, each contrasted against the
+            # reference (first) category, between the two compared groups
             oddsInfo <- private$.oddsInfo(data)
-            compareLevels <- if (oddsInfo$available) oddsInfo$groupLevels[-1] else '.'
+            compareLevels <- if (oddsInfo$available) oddsInfo$iterateLevels[-1] else '.'
             oddsFootnote <- `if`(self$options$compare == 'rows', .('Rows compared'), .('Columns compared'))
 
             for (mat in mats) {
@@ -605,23 +605,33 @@ contTablesClass <- R6::R6Class(
                         mh$addFootnote(rowNo=othRowNo, 'chi2', .('At least one variable must have two levels'))
                 }
 
-                # comparative measures (odds table): OR/logOR are reported for
-                # every non-reference category regardless of `compare` (they
-                # are invariant to the row/column orientation of a 2x2 table);
-                # RR/DP need the group (compared) axis oriented as the matrix
-                # rows first, which is what .orient() does
+                # comparative measures (odds table): .orient() puts the two
+                # `compare`-selected groups on the rows and the iterated
+                # variable's categories on the columns, so each reference-vs-
+                # category submatrix is selected by column. OR/logOR are
+                # reported for every non-reference category regardless of
+                # `compare` (invariant to a 2x2 table's row/column
+                # orientation) so always use the submatrix as-is (reference
+                # category first). RR/DP are directional: for a true 2x2
+                # table (the iterated variable itself has only 2 categories)
+                # they keep jmv's original formula (success = the reference/
+                # first category, unrelated to "compared"); for a genuine
+                # 2xK table (K > 2) they instead compare each category to the
+                # reference category, so success = the *compared* category,
+                # which needs the submatrix's two columns swapped first
                 if (oddsInfo$available) {
 
                     matOriented <- private$.orient(mat)
 
                     for (g in seq_along(compareLevels)) {
 
-                        sub <- matOriented[c(1, g + 1), , drop=FALSE]
+                        sub <- matOriented[, c(1, g + 1), drop=FALSE]
+                        subDP <- if (oddsInfo$isTrue2x2) sub else sub[, c(2, 1), drop=FALSE]
 
-                        dpG  <- private$.diffProp(sub, Ha)
+                        dpG  <- private$.diffProp(subDP, Ha)
                         lorG <- vcd::loddsratio(sub)
                         ciG  <- confint(lorG, level=ciWidth)
-                        rrG  <- private$.relativeRisk(sub)
+                        rrG  <- private$.relativeRisk(subDP)
 
                         odds$setRow(rowNo=oddsRowNo, values=list(
                             `v[dp]`=dpG$dp,
@@ -650,7 +660,7 @@ contTablesClass <- R6::R6Class(
 
                 } else {
 
-                    unavailMsg <- .('Available for 2xK tables only (the variable not being compared must have exactly two categories)')
+                    unavailMsg <- .('Available for 2xK tables only (the variable selected by Compare must have exactly two categories)')
 
                     odds$setRow(rowNo=oddsRowNo, list(
                         `v[dp]`=NaN, `cil[dp]`='', `ciu[dp]`='',
@@ -1183,28 +1193,32 @@ contTablesClass <- R6::R6Class(
         },
         .oddsInfo = function(data) {
 
-            # 2xK comparative measures are available whenever the axis NOT
-            # selected by `compare` (the fixed "outcome" axis) has exactly
-            # two categories; the `compare`-selected axis (the "group" axis)
-            # can then have any number (K >= 2) of categories, each compared
-            # to the reference (first) category of that axis
+            # 2xK comparative measures are available whenever the axis
+            # SELECTED by `compare` (the two compared groups, e.g. caso vs
+            # control) has exactly two categories; the OTHER axis (the
+            # "iterated" variable, e.g. tabaco) can then have any number
+            # (K >= 2) of categories, each contrasted against the reference
+            # (first) category of that axis, between the two compared groups
 
             rowVarName <- self$options$rows
             colVarName <- self$options$cols
 
             if (is.null(rowVarName) || is.null(colVarName))
-                return(list(groupVarName=NULL, groupLevels=character(0), available=FALSE))
+                return(list(iterateVarName=NULL, iterateLevels=character(0), available=FALSE, isTrue2x2=FALSE))
 
             compareRows <- self$options$compare == 'rows'
 
-            groupVarName  <- if (compareRows) rowVarName else colVarName
-            outcomeLevels <- if (compareRows) nlevels(data[[colVarName]]) else nlevels(data[[rowVarName]])
-            groupLevels   <- base::levels(data[[groupVarName]])
+            pairVarName    <- if (compareRows) rowVarName else colVarName
+            iterateVarName <- if (compareRows) colVarName else rowVarName
+
+            pairLevels    <- nlevels(data[[pairVarName]])
+            iterateLevels <- base::levels(data[[iterateVarName]])
 
             list(
-                groupVarName = groupVarName,
-                groupLevels = groupLevels,
-                available = (outcomeLevels == 2 && length(groupLevels) >= 2))
+                iterateVarName = iterateVarName,
+                iterateLevels = iterateLevels,
+                available = (pairLevels == 2 && length(iterateLevels) >= 2),
+                isTrue2x2 = (pairLevels == 2 && length(iterateLevels) == 2))
         },
         .orient = function(mat) {
             # orients a table so that the `compare`-selected (group) variable

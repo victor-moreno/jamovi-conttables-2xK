@@ -308,11 +308,22 @@ testthat::test_that("generated syntax uses the counts variable as formula LHS", 
 })
 
 # ---- 2xK comparative measures (new behaviour vs. jmv) --------------------
+#
+# `compare` selects the variable whose two categories are "the compared
+# groups" (it must have exactly two categories). The other variable can have
+# K >= 2 categories; each non-reference category is contrasted, against a
+# reference category (its first level), between the two compared groups.
+# OR/logOR are always computed the same way (orientation-invariant). RR/DP
+# are directional: for a *true* 2x2 table (the other variable also has only
+# two categories) they keep jmv's original formula exactly; for a genuine
+# 2xK table (K > 2) they instead compare each category's prevalence between
+# the two compared groups, which is why the two pathways below give
+# opposite-signed DP/RR for what is otherwise the same underlying data.
 
 testthat::test_that("2xK comparative measures expand to one row per non-reference category", {
-    # GIVEN a 2x3 table: 2-level outcome (status) x 3-level exposure (dose),
-    # compare="columns" so `dose` (K=3) is the compared/group variable and
-    # `status` (2 levels) is the fixed outcome
+    # GIVEN a 2x3 table: 2-level status (the compared groups) x 3-level dose
+    # (the iterated variable), compare="rows" so `status` (2 levels) is the
+    # compared variable and `dose` (K=3) is iterated vs. its reference (low)
     data <- data.frame(
         status = factor(rep(c("neg", "pos"), 3), c("neg", "pos")),
         dose   = factor(c("low","low","med","med","high","high"), c("low","med","high")),
@@ -320,7 +331,7 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
     )
 
     r <- conttables2::contTables(
-        data=data, rows="status", cols="dose", counts="n", compare="columns",
+        data=data, rows="status", cols="dose", counts="n", compare="rows",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
 
     odds <- r$odds$asDF
@@ -330,39 +341,33 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
     testthat::expect_equal(2, nrow(odds))
     testthat::expect_equal(c("med", "high"), odds[['dose']])
 
-    # cross-check: comparing just {low, med} (dropped to a classic 2x2 table)
-    # through the *unchanged* 2x2 code path must give the exact same numbers
-    # as the "med" row of the 2xK table
-    data2 <- droplevels(data[data$dose %in% c("low", "med"), ])
-    r2 <- conttables2::contTables(
-        data=data2, rows="status", cols="dose", counts="n", compare="columns",
+    # OR/logOR: computed from the {reference, category} x {compared groups}
+    # submatrix directly, e.g. for "med": (50*20)/(40*10) = 2.5
+    testthat::expect_equal(c(2.5, 4.166667), odds[['v[o]']], tolerance = 1e-5)
+
+    # DP/RR (genuine 2xK, K=3 > 2): compares each dose category's prevalence
+    # between the two status groups, e.g. for "med":
+    #   P(med|neg) - P(med|pos) = 40/90 - 20/30 = -0.2222
+    testthat::expect_equal(c(-0.2222222, -0.3392857), odds[['v[dp]']], tolerance = 1e-5)
+    testthat::expect_equal(c(0.6666667, 0.5250000), odds[['v[rr]']], tolerance = 1e-5)
+
+    # compare="columns" is invalid here (dose has 3 levels, not 2, so it
+    # can't be "the compared groups") -- single unavailable placeholder row
+    rBad <- conttables2::contTables(
+        data=data, rows="status", cols="dose", counts="n", compare="columns",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
-    odds2 <- r2$odds$asDF
-
-    testthat::expect_equal(odds2[['v[dp]']],  odds[1, 'v[dp]'])
-    testthat::expect_equal(odds2[['v[lo]']],  odds[1, 'v[lo]'])
-    testthat::expect_equal(odds2[['v[o]']],   odds[1, 'v[o]'])
-    testthat::expect_equal(odds2[['v[rr]']],  odds[1, 'v[rr]'])
-    testthat::expect_equal(odds2[['cil[o]']], odds[1, 'cil[o]'])
-    testthat::expect_equal(odds2[['ciu[o]']], odds[1, 'ciu[o]'])
-
-    # same cross-check for {low, high} vs. the "high" row
-    data3 <- droplevels(data[data$dose %in% c("low", "high"), ])
-    r3 <- conttables2::contTables(
-        data=data3, rows="status", cols="dose", counts="n", compare="columns",
-        diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
-    odds3 <- r3$odds$asDF
-
-    testthat::expect_equal(odds3[['v[dp]']], odds[2, 'v[dp]'])
-    testthat::expect_equal(odds3[['v[lo]']], odds[2, 'v[lo]'])
-    testthat::expect_equal(odds3[['v[o]']],  odds[2, 'v[o]'])
-    testthat::expect_equal(odds3[['v[rr]']], odds[2, 'v[rr]'])
+    oddsBad <- rBad$odds$asDF
+    testthat::expect_equal(1, nrow(oddsBad))
+    testthat::expect_true(is.nan(oddsBad[['v[dp]']]))
+    testthat::expect_true(is.nan(oddsBad[['v[o]']]))
 })
 
-testthat::test_that("OR/logOR don't depend on `compare`, RR/DP do", {
-    # a classic 2x2 table: OR must be identical whichever variable is
-    # nominated as "compare" (it's orientation-invariant), but RR flips to
-    # its reciprocal-ish counterpart depending on which axis is compared
+testthat::test_that("true 2x2 tables keep jmv's original DP/RR formula, OR unaffected by `compare`", {
+    # a classic 2x2 table (both variables have exactly 2 levels): OR must be
+    # identical whichever variable is nominated as "compare" (it's
+    # orientation-invariant); DP/RR use jmv's original formula (success =
+    # the reference/first category) and differ depending on which variable
+    # is compared -- this is unchanged from jmv itself
     data <- data.frame(
         status = factor(c("neg","neg","pos","pos"), c("neg","pos")),
         dose   = factor(c("low","high","low","high"), c("low","high")),
@@ -371,10 +376,10 @@ testthat::test_that("OR/logOR don't depend on `compare`, RR/DP do", {
 
     rRows <- conttables2::contTables(
         data=data, rows="status", cols="dose", counts="n", compare="rows",
-        logOdds=TRUE, odds=TRUE, relRisk=TRUE)
+        diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
     rCols <- conttables2::contTables(
         data=data, rows="status", cols="dose", counts="n", compare="columns",
-        logOdds=TRUE, odds=TRUE, relRisk=TRUE)
+        diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
 
     oddsRows <- rRows$odds$asDF
     oddsCols <- rCols$odds$asDF
@@ -382,27 +387,11 @@ testthat::test_that("OR/logOR don't depend on `compare`, RR/DP do", {
     testthat::expect_equal(oddsRows[['v[o]']],  oddsCols[['v[o]']])
     testthat::expect_equal(oddsRows[['v[lo]']], oddsCols[['v[lo]']])
     testthat::expect_false(isTRUE(all.equal(oddsRows[['v[rr]']], oddsCols[['v[rr]']])))
-})
 
-testthat::test_that("comparative measures are unavailable when `compare` is misaligned", {
-    # same 2x3 table as above, but compare="rows" picks the 2-level `status`
-    # as the group axis, leaving the 3-level `dose` as the "outcome" -- not
-    # a valid 2xK configuration, so the table stays unavailable (as jmv's
-    # 2x2-only table would for any non-2x2 table)
-    data <- data.frame(
-        status = factor(rep(c("neg", "pos"), 3), c("neg", "pos")),
-        dose   = factor(c("low","low","med","med","high","high"), c("low","med","high")),
-        n      = c(50, 10, 40, 20, 30, 25)
-    )
-
-    r <- conttables2::contTables(
-        data=data, rows="status", cols="dose", counts="n", compare="rows",
-        diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
-
-    odds <- r$odds$asDF
-    testthat::expect_equal(1, nrow(odds))
-    testthat::expect_true(is.nan(odds[['v[dp]']]))
-    testthat::expect_true(is.nan(odds[['v[o]']]))
+    testthat::expect_equal(0.3392857, oddsRows[['v[dp]']], tolerance = 1e-5)
+    testthat::expect_equal(2.1875, oddsRows[['v[rr]']], tolerance = 1e-5)
+    testthat::expect_equal(0.2878788, oddsCols[['v[dp]']], tolerance = 1e-5)
+    testthat::expect_equal(1.527778, oddsCols[['v[rr]']], tolerance = 1e-5)
 })
 
 testthat::test_that("comparative measures stay unavailable for RxC tables where no axis has 2 levels", {
