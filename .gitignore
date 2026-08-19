@@ -1,0 +1,45 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+.Ruserdata
+
+# Example code in build process
+*-Ex.R
+
+# R CMD build/check output
+/*.tar.gz
+/*.Rcheck/
+
+# RStudio files
+.Rproj.user/
+
+# jamovi options js / packaged module / build folders
+jamovi/ui/*.options.js
+*.jmo
+build/
+build*/
+
+# R environment
+.Renviron
+.Rprofile
+renv/
+renv.lock
+
+# other
+temp/
+man/
+.DS_Store
+
+# per user global instructions
+.claude/
+.cache/
+.tmp/
+.venv/
+.envrc
+*.zip
+*.tar
+*.tar.gz
+Rplots.pdf

@@ -1,0 +1,10 @@
+{
+  "name": "conttables2",
+  "version": "0.1.0",
+  "scripts": {
+    "prepublish": "mkdir -p conttables2 && jmc . --install-to conttables2"
+  },
+  "devDependencies": {
+    "jamovi-compiler": "jamovi/jamovi-compiler"
+  }
+}
