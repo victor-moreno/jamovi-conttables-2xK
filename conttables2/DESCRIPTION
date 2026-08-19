@@ -6,7 +6,7 @@ Date: 2026-08-19
 Authors@R: c(person("Ravi", "Selker", role=c("aut", "cph")),
     person("Jonathon", "Love", role=c("aut", "cph"), email="jon@thon.cc"),
     person("Damian", "Dropmann", role=c("aut", "cph")),
-    person("Victor", "Moreno", role=c("aut", "cre", "cph")),
+    person("Victor", "Moreno", role=c("aut", "cre", "cph"), email="v.moreno@iconcologia.net"),
     person("Maurizio", "Agosti", role=c("ctb", "cph")),
     person("Sebastian", "Jentschke", role=c("ctb", "cph")))
 Maintainer: Victor Moreno <v.moreno@iconcologia.net>
@@ -21,8 +21,6 @@ BugReports: https://github.com/jamovi/jmv/issues
 License: GPL (>= 2)
 Language: en-GB
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends:
     R (>= 3.2)
 Imports:
