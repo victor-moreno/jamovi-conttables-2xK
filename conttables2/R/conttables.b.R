@@ -550,9 +550,9 @@ contTablesClass <- R6::R6Class(
 
                 hypothesisTested <- ''
                 if (hypothesis == 'oneGreater')
-                    hypothesisTested <- jmvcore::format("Hₐ: {} P({}) > P({})", variable, groups[1], groups[2])
+                    hypothesisTested <- jmvcore::format("H\u2090: {} P({}) > P({})", variable, groups[1], groups[2])
                 else if (hypothesis == 'twoGreater')
-                    hypothesisTested <- jmvcore::format("Hₐ: {} P({}) < P({})", variable, groups[1], groups[2])
+                    hypothesisTested <- jmvcore::format("H\u2090: {} P({}) < P({})", variable, groups[1], groups[2])
                 else
                     hypothesisTested <- 'two-sided'
 
@@ -607,31 +607,41 @@ contTablesClass <- R6::R6Class(
 
                 # comparative measures (odds table): .orient() puts the two
                 # `compare`-selected groups on the rows and the iterated
-                # variable's categories on the columns, so each reference-vs-
-                # category submatrix is selected by column. OR/logOR are
-                # reported for every non-reference category regardless of
-                # `compare` (invariant to a 2x2 table's row/column
-                # orientation) so always use the submatrix as-is (reference
-                # category first). RR/DP are directional: for a true 2x2
-                # table (the iterated variable itself has only 2 categories)
-                # they keep jmv's original formula (success = the reference/
-                # first category, unrelated to "compared"); for a genuine
-                # 2xK table (K > 2) they instead compare each category to the
-                # reference category, so success = the *compared* category,
-                # which needs the submatrix's two columns swapped first
+                # variable's categories on the columns. OR/logOR are reported
+                # for every non-reference category regardless of `compare`
+                # (invariant to a 2x2 table's row/column orientation), from
+                # the reference-vs-category submatrix, reference first. RR/DP
+                # are directional and use each compared group's FULL row
+                # total as the denominator (not just the reference+compared
+                # submatrix), matching the "% within column/row" reading a
+                # user gets from the frequency table itself: for a true 2x2
+                # table (iterated variable has only 2 categories) the full
+                # row total already equals the submatrix's row total, so this
+                # is jmv's original formula unchanged (success = reference/
+                # first category); for a genuine 2xK table (K > 2) success is
+                # the *compared* category, counted against the full row total
+                # across all K categories
                 if (oddsInfo$available) {
 
                     matOriented <- private$.orient(mat)
+                    rowTotals <- rowSums(matOriented)
 
                     for (g in seq_along(compareLevels)) {
 
                         sub <- matOriented[, c(1, g + 1), drop=FALSE]
-                        subDP <- if (oddsInfo$isTrue2x2) sub else sub[, c(2, 1), drop=FALSE]
 
-                        dpG  <- private$.diffProp(subDP, Ha)
+                        successCol <- if (oddsInfo$isTrue2x2) 1 else (g + 1)
+                        successG1 <- matOriented[1, successCol]
+                        successG2 <- matOriented[2, successCol]
+                        virtualMat <- matrix(
+                            c(successG1, rowTotals[1] - successG1,
+                              successG2, rowTotals[2] - successG2),
+                            nrow=2, byrow=TRUE)
+
+                        dpG  <- private$.diffProp(virtualMat, Ha)
                         lorG <- vcd::loddsratio(sub)
                         ciG  <- confint(lorG, level=ciWidth)
-                        rrG  <- private$.relativeRisk(subDP)
+                        rrG  <- private$.relativeRisk(virtualMat)
 
                         odds$setRow(rowNo=oddsRowNo, values=list(
                             `v[dp]`=dpG$dp,

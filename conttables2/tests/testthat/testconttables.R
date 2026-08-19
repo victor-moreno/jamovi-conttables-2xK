@@ -346,10 +346,10 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
     testthat::expect_equal(c(2.5, 4.166667), odds[['v[o]']], tolerance = 1e-5)
 
     # DP/RR (genuine 2xK, K=3 > 2): compares each dose category's prevalence
-    # between the two status groups, e.g. for "med":
-    #   P(med|neg) - P(med|pos) = 40/90 - 20/30 = -0.2222
-    testthat::expect_equal(c(-0.2222222, -0.3392857), odds[['v[dp]']], tolerance = 1e-5)
-    testthat::expect_equal(c(0.6666667, 0.5250000), odds[['v[rr]']], tolerance = 1e-5)
+    # between the two status groups, using each group's FULL row total (all
+    # dose categories), e.g. for "med": P(med|neg) - P(med|pos) = 40/120 - 20/55 = -0.0303
+    testthat::expect_equal(c(-0.03030303, -0.20454545), odds[['v[dp]']], tolerance = 1e-5)
+    testthat::expect_equal(c(0.9166667, 0.5500000), odds[['v[rr]']], tolerance = 1e-5)
 
     # compare="columns" is invalid here (dose has 3 levels, not 2, so it
     # can't be "the compared groups") -- single unavailable placeholder row
