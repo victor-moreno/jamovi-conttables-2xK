@@ -67,3 +67,8 @@ bash tools/prepare-jmo.sh 4.6.0 all     # metadata-only repackage into dist/
 bash tools/release.sh 4.6.0             # + publish a GitHub release with those assets
 ```
 
+<br />
+
+## Acknowledment
+
+This module was created with Claude co
