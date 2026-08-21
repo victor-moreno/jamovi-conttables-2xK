@@ -607,30 +607,46 @@ contTablesClass <- R6::R6Class(
 
                 # comparative measures (odds table): .orient() puts the two
                 # `compare`-selected groups on the rows and the iterated
-                # variable's categories on the columns. OR/logOR are reported
-                # for every non-reference category regardless of `compare`
-                # (invariant to a 2x2 table's row/column orientation), from
-                # the reference-vs-category submatrix, reference first. RR/DP
-                # are directional and use each compared group's FULL row
-                # total as the denominator (not just the reference+compared
-                # submatrix), matching the "% within column/row" reading a
-                # user gets from the frequency table itself: for a true 2x2
-                # table (iterated variable has only 2 categories) the full
-                # row total already equals the submatrix's row total, so this
-                # is jmv's original formula unchanged (success = reference/
-                # first category); for a genuine 2xK table (K > 2) success is
-                # the *compared* category, counted against the full row total
-                # across all K categories
+                # variable's categories on the columns. Reference = the FIRST
+                # level, for BOTH axes: columns (the iterated variable's
+                # reference category) and rows (the compared-groups' reference
+                # group) -- so the row order is swapped here, putting the
+                # compared groups' SECOND (non-reference) level first, the
+                # same convention used for columns and the one implied by 0/1
+                # dummy coding in logistic regression (reference = first
+                # level, effect = second level). OR/logOR, RR and DP all use
+                # this same success/reference pairing on both axes, which
+                # makes OR, RR and DP always point the same direction (OR > 1
+                # <=> RR > 1 <=> DP > 0) for a given reference-vs-category
+                # pair. Swapping BOTH axes (not just columns, as an earlier
+                # version of this code did) is what makes OR for a true 2x2
+                # table numerically IDENTICAL to jmv's original formula (a
+                # simultaneous row+column swap is a 180-degree rotation of
+                # the table, which classic 2x2 association measures are
+                # invariant to) -- and this holds for OR at ANY K, since OR
+                # only ever looks at the {reference, category} submatrix, so
+                # OR is also K-invariant (filtering a 2xK table down to just
+                # one category reproduces the same OR). RR/DP use each
+                # compared group's FULL row total as the denominator instead
+                # (not just the reference+compared submatrix), matching the
+                # "% within column/row" reading a user gets from the
+                # frequency table itself -- for a true 2x2 table the full row
+                # total already equals the submatrix's row total, so RR/DP
+                # also match jmv's original formula there; for a genuine 2xK
+                # table (K > 2) they don't (the other K-2 categories are
+                # counted in the denominator but not in the {reference,
+                # category} submatrix OR looks at), which is why a footnote
+                # calls out the RR/DP denominator explicitly.
                 if (oddsInfo$available) {
 
-                    matOriented <- private$.orient(mat)
+                    matOriented <- private$.orient(mat)[c(2, 1), , drop=FALSE]
                     rowTotals <- rowSums(matOriented)
 
                     for (g in seq_along(compareLevels)) {
 
-                        sub <- matOriented[, c(1, g + 1), drop=FALSE]
+                        successCol <- g + 1
+                        sub <- matOriented[, c(successCol, 1), drop=FALSE]
 
-                        successCol <- if (oddsInfo$isTrue2x2) 1 else (g + 1)
                         successG1 <- matOriented[1, successCol]
                         successG2 <- matOriented[2, successCol]
                         virtualMat <- matrix(
@@ -659,6 +675,18 @@ contTablesClass <- R6::R6Class(
 
                         odds$addFootnote(rowNo=oddsRowNo, 'v[dp]', oddsFootnote)
                         odds$addFootnote(rowNo=oddsRowNo, 'v[rr]', oddsFootnote)
+
+                        referenceFootnote <- .('Reference is the first category, for rows and columns')
+                        odds$addFootnote(rowNo=oddsRowNo, 'v[dp]', referenceFootnote)
+                        odds$addFootnote(rowNo=oddsRowNo, 'v[lo]', referenceFootnote)
+                        odds$addFootnote(rowNo=oddsRowNo, 'v[o]', referenceFootnote)
+                        odds$addFootnote(rowNo=oddsRowNo, 'v[rr]', referenceFootnote)
+
+                        denomFootnote <- `if`(self$options$compare == 'rows',
+                            .('Denominator is the row total'),
+                            .('Denominator is the column total'))
+                        odds$addFootnote(rowNo=oddsRowNo, 'v[dp]', denomFootnote)
+                        odds$addFootnote(rowNo=oddsRowNo, 'v[rr]', denomFootnote)
 
                         if (any(sub == 0)) {
                             odds$addFootnote(rowNo=oddsRowNo, 'v[lo]', .('Haldane-Anscombe correction applied'))
@@ -1214,7 +1242,7 @@ contTablesClass <- R6::R6Class(
             colVarName <- self$options$cols
 
             if (is.null(rowVarName) || is.null(colVarName))
-                return(list(iterateVarName=NULL, iterateLevels=character(0), available=FALSE, isTrue2x2=FALSE))
+                return(list(iterateVarName=NULL, iterateLevels=character(0), available=FALSE))
 
             compareRows <- self$options$compare == 'rows'
 
@@ -1227,8 +1255,7 @@ contTablesClass <- R6::R6Class(
             list(
                 iterateVarName = iterateVarName,
                 iterateLevels = iterateLevels,
-                available = (pairLevels == 2 && length(iterateLevels) >= 2),
-                isTrue2x2 = (pairLevels == 2 && length(iterateLevels) == 2))
+                available = (pairLevels == 2 && length(iterateLevels) >= 2))
         },
         .orient = function(mat) {
             # orients a table so that the `compare`-selected (group) variable

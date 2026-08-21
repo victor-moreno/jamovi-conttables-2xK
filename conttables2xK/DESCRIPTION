@@ -1,8 +1,8 @@
 Package: conttables2xK
 Type: Package
 Title: Contingency Tables, with 2xK Comparative Measures
-Version: 1.0.0
-Date: 2026-08-19
+Version: 1.1.0
+Date: 2026-08-21
 Authors@R: c(person("Ravi", "Selker", role=c("aut", "cph")),
     person("Jonathon", "Love", role=c("aut", "cph"), email="jon@thon.cc"),
     person("Damian", "Dropmann", role=c("aut", "cph")),
@@ -13,10 +13,15 @@ Maintainer: Victor Moreno <v.moreno@iconcologia.net>
 Description: A clone of jmv's Contingency Tables ('Independent Samples') analysis, extended so
     that the comparative measures (odds ratio, log odds ratio, relative risk, difference in
     proportions) are computed for 2xK tables, not just 2x2 tables: each non-reference category
-    of the compared-groups variable is contrasted against a reference category (the first level).
-    This package is intended for use from the 'jamovi' statistical spreadsheet (see
-    <https://www.jamovi.org> for more information), and as a staging area for a pull request
-    against 'jmv' <https://github.com/jamovi/jmv>.
+    of the iterated variable is contrasted against a reference category (the first level),
+    between the two compared groups. Reference category = the first level, for both axes (the
+    compared-groups variable and the iterated variable); this makes odds ratio and difference
+    in proportions numerically identical to jmv's own formula for a true 2x2 table (and odds
+    ratio invariant to K), while relative risk is close but not numerically identical to jmv's
+    formula, even for a true 2x2 table -- see the package README for the full rationale, a
+    major change from jmv's original 2x2 convention. This package is intended for use from the
+    'jamovi' statistical spreadsheet (see <https://www.jamovi.org> for more information), and
+    as a staging area for a pull request against 'jmv' <https://github.com/jamovi/jmv>.
 BugReports: https://github.com/jamovi/jmv/issues
 License: GPL (>= 2)
 Language: en-GB

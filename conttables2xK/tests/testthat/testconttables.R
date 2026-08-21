@@ -106,16 +106,20 @@ testthat::test_that('All options in the contTables work (sunny)', {
     testthat::expect_equal(100, chiSqTable[['value[N]']], tolerance = 1e-3)
 
 
-    # Test comparative measures table (classic 2x2: a single comparison row,
-    # identical numbers to jmv's own contTables)
+    # Test comparative measures table (classic 2x2: a single comparison row).
+    # Reference = the first category, for both rows and columns (same as
+    # jmv's own contTables) -- OR and DP are therefore numerically identical
+    # to jmv's numbers; RR is close but NOT identical (a ratio, unlike OR and
+    # DP, is not invariant to the double row+column swap that makes those two
+    # match jmv exactly -- see conttables.b.R for the full explanation)
     compMeasuresTable <- r$odds$asDF
     testthat::expect_equal(1, nrow(compMeasuresTable))
     testthat::expect_equal('Difference in 2 proportions', compMeasuresTable[['t[dp]']])
-    testthat::expect_equal(0.002, compMeasuresTable[['v[dp]']], tolerance = 1e-3)
+    testthat::expect_equal(0.00202, compMeasuresTable[['v[dp]']], tolerance = 1e-3)
     testthat::expect_equal(-0.195, compMeasuresTable[['cil[dp]']], tolerance = 1e-3)
     testthat::expect_equal(0.199, compMeasuresTable[['ciu[dp]']], tolerance = 1e-3)
     testthat::expect_equal('Log odds ratio', compMeasuresTable[['t[lo]']])
-    testthat::expect_equal(0.008, compMeasuresTable[['v[lo]']], tolerance = 1e-3)
+    testthat::expect_equal(0.00808, compMeasuresTable[['v[lo]']], tolerance = 1e-3)
     testthat::expect_equal(-0.78, compMeasuresTable[['cil[lo]']], tolerance = 1e-3)
     testthat::expect_equal(0.796, compMeasuresTable[['ciu[lo]']], tolerance = 1e-3)
     testthat::expect_equal('Odds ratio', compMeasuresTable[['t[o]']])
@@ -123,9 +127,9 @@ testthat::test_that('All options in the contTables work (sunny)', {
     testthat::expect_equal(0.458, compMeasuresTable[['cil[o]']], tolerance = 1e-3)
     testthat::expect_equal(2.217, compMeasuresTable[['ciu[o]']], tolerance = 1e-3)
     testthat::expect_equal('Relative risk', compMeasuresTable[['t[rr]']])
-    testthat::expect_equal(1.004, compMeasuresTable[['v[rr]']], tolerance = 1e-3)
-    testthat::expect_equal(0.682, compMeasuresTable[['cil[rr]']], tolerance = 1e-3)
-    testthat::expect_equal(1.477, compMeasuresTable[['ciu[rr]']], tolerance = 1e-3)
+    testthat::expect_equal(1.00413, compMeasuresTable[['v[rr]']], tolerance = 1e-4)
+    testthat::expect_equal(0.6717, compMeasuresTable[['cil[rr]']], tolerance = 1e-3)
+    testthat::expect_equal(1.5011, compMeasuresTable[['ciu[rr]']], tolerance = 1e-3)
 
 
     # Test nominal table
@@ -313,12 +317,20 @@ testthat::test_that("generated syntax uses the counts variable as formula LHS", 
 # groups" (it must have exactly two categories). The other variable can have
 # K >= 2 categories; each non-reference category is contrasted, against a
 # reference category (its first level), between the two compared groups.
-# OR/logOR are always computed the same way (orientation-invariant). RR/DP
-# are directional: for a *true* 2x2 table (the other variable also has only
-# two categories) they keep jmv's original formula exactly; for a genuine
-# 2xK table (K > 2) they instead compare each category's prevalence between
-# the two compared groups, which is why the two pathways below give
-# opposite-signed DP/RR for what is otherwise the same underlying data.
+# Reference = the first category, for BOTH axes (rows and columns) -- same
+# convention as jmv's own contTables. This makes OR K-invariant (filtering a
+# 2xK table down to just one category reproduces the same OR, since OR only
+# looks at the {reference, category} pair) and, for a true 2x2 table (K == 2),
+# makes OR and DP numerically identical to jmv's original formula (a
+# simultaneous row+column swap is a 180-degree rotation of the table, which
+# these two measures are invariant to). RR is NOT invariant to that swap (it's
+# a ratio, not a difference), so RR can differ from jmv's original number even
+# for a true 2x2 table. RR/DP use each compared group's FULL row total as the
+# denominator (matching the "% within column/row" reading from the frequency
+# table), which is NOT K-invariant (changes when other categories are
+# added/removed) -- so RR/DP can, in principle, still disagree in sign with OR
+# for a K > 2 table if the other categories skew the row totals enough (a
+# Simpson's-paradox-style effect, not a bug).
 
 testthat::test_that("2xK comparative measures expand to one row per non-reference category", {
     # GIVEN a 2x3 table: 2-level status (the compared groups) x 3-level dose
@@ -341,15 +353,15 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
     testthat::expect_equal(2, nrow(odds))
     testthat::expect_equal(c("med", "high"), odds[['dose']])
 
-    # OR/logOR: computed from the {reference, category} x {compared groups}
-    # submatrix directly, e.g. for "med": (50*20)/(40*10) = 2.5
+    # OR/logOR: classic 2x2 odds ratio of the {reference, category} x
+    # {compared groups} submatrix, e.g. for "med": (50*20)/(40*10) = 2.5
     testthat::expect_equal(c(2.5, 4.166667), odds[['v[o]']], tolerance = 1e-5)
 
     # DP/RR (genuine 2xK, K=3 > 2): compares each dose category's prevalence
     # between the two status groups, using each group's FULL row total (all
-    # dose categories), e.g. for "med": P(med|neg) - P(med|pos) = 40/120 - 20/55 = -0.0303
-    testthat::expect_equal(c(-0.03030303, -0.20454545), odds[['v[dp]']], tolerance = 1e-5)
-    testthat::expect_equal(c(0.9166667, 0.5500000), odds[['v[rr]']], tolerance = 1e-5)
+    # dose categories), e.g. for "med": P(med|pos) - P(med|neg) = 20/55 - 40/120 = 0.0303
+    testthat::expect_equal(c(0.03030303, 0.20454545), odds[['v[dp]']], tolerance = 1e-5)
+    testthat::expect_equal(c(1.090909, 1.818182), odds[['v[rr]']], tolerance = 1e-5)
 
     # compare="columns" is invalid here (dose has 3 levels, not 2, so it
     # can't be "the compared groups") -- single unavailable placeholder row
@@ -362,12 +374,39 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
     testthat::expect_true(is.nan(oddsBad[['v[o]']]))
 })
 
-testthat::test_that("true 2x2 tables keep jmv's original DP/RR formula, OR unaffected by `compare`", {
+testthat::test_that("OR for a reference-vs-category pair is unchanged if the other 2xK categories are dropped", {
+    # GIVEN the same 2x3 table as above, but with the "high" dose category
+    # removed (a true 2x2 of just status x {low, med}): OR for "med" must
+    # equal the OR reported for "med" in the full 2x3 table, since OR is
+    # always the classic 2x2 odds ratio of the {reference, category}
+    # submatrix alone and must not depend on what other categories exist
+    data3 <- data.frame(
+        status = factor(rep(c("neg", "pos"), 3), c("neg", "pos")),
+        dose   = factor(c("low","low","med","med","high","high"), c("low","med","high")),
+        n      = c(50, 10, 40, 20, 30, 25)
+    )
+    odds3 <- conttables2xK::contTables(
+        data=data3, rows="status", cols="dose", counts="n", compare="rows",
+        logOdds=TRUE, odds=TRUE)$odds$asDF
+
+    data2 <- data3[data3$dose != "high", ]
+    data2$dose <- factor(data2$dose, c("low", "med"))
+    odds2 <- conttables2xK::contTables(
+        data=data2, rows="status", cols="dose", counts="n", compare="rows",
+        logOdds=TRUE, odds=TRUE)$odds$asDF
+
+    testthat::expect_equal(odds3[odds3$dose == 'med', 'v[o]'], odds2[['v[o]']])
+    testthat::expect_equal(odds3[odds3$dose == 'med', 'v[lo]'], odds2[['v[lo]']])
+})
+
+testthat::test_that("true 2x2 tables reproduce jmv's original OR and DP exactly, RR is close but not exact", {
     # a classic 2x2 table (both variables have exactly 2 levels): OR must be
     # identical whichever variable is nominated as "compare" (it's
-    # orientation-invariant); DP/RR use jmv's original formula (success =
-    # the reference/first category) and differ depending on which variable
-    # is compared -- this is unchanged from jmv itself
+    # orientation-invariant); OR and DP are numerically identical to jmv's
+    # own contTables formula (success = first/reference category); RR is not
+    # (a ratio isn't invariant to the row+column swap that makes OR and DP
+    # match jmv exactly) -- these are jmv's own textbook numbers for this
+    # exact 2x2 table (status x dose, compare="rows"/"columns")
     data <- data.frame(
         status = factor(c("neg","neg","pos","pos"), c("neg","pos")),
         dose   = factor(c("low","high","low","high"), c("low","high")),
@@ -388,10 +427,18 @@ testthat::test_that("true 2x2 tables keep jmv's original DP/RR formula, OR unaff
     testthat::expect_equal(oddsRows[['v[lo]']], oddsCols[['v[lo]']])
     testthat::expect_false(isTRUE(all.equal(oddsRows[['v[rr]']], oddsCols[['v[rr]']])))
 
+    # compare="rows": success = dose 'high', reference 'low'; effect group =
+    # status 'pos' (2nd level), reference group = 'neg' (1st level):
+    # P(high|pos) - P(high|neg) = 25/35 - 30/80 = 0.3392857 -- numerically
+    # equal to jmv's own P(low|neg) - P(low|pos), by the row+column symmetry
+    testthat::expect_equal(4.166667, oddsRows[['v[o]']], tolerance = 1e-5)
     testthat::expect_equal(0.3392857, oddsRows[['v[dp]']], tolerance = 1e-5)
-    testthat::expect_equal(2.1875, oddsRows[['v[rr]']], tolerance = 1e-5)
+    testthat::expect_equal(1.904762, oddsRows[['v[rr]']], tolerance = 1e-5)
+    # compare="columns": success = status 'pos', reference 'neg'; effect
+    # group = dose 'high' (2nd level), reference group = 'low' (1st level):
+    # P(pos|high) - P(pos|low) = 25/55 - 10/60 = 0.2878788
     testthat::expect_equal(0.2878788, oddsCols[['v[dp]']], tolerance = 1e-5)
-    testthat::expect_equal(1.527778, oddsCols[['v[rr]']], tolerance = 1e-5)
+    testthat::expect_equal(2.727273, oddsCols[['v[rr]']], tolerance = 1e-5)
 })
 
 testthat::test_that("comparative measures stay unavailable for RxC tables where no axis has 2 levels", {

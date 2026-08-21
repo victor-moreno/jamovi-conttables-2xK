@@ -13,6 +13,30 @@ alongside jmv's own "Independent Samples" entry.
 Built with minimal changes to [jamovi/jmv](https://github.com/jamovi/jmv) — only
 `conttables2xK/R/contTables.b.R` differs.
 
+## Comparative measures: reference convention (major change vs. jmv)
+
+Reference category = the **first level**, for both axes: the compared-groups variable (`compare`:
+rows or columns) and the iterated variable. Concretely, the compared-groups variable's *second*
+level is treated as the group of interest (matching 0/1 dummy coding in logistic regression), and
+each non-reference category of the iterated variable is contrasted against its first/reference
+level.
+
+- **Odds ratio / log odds ratio**: numerically identical to jmv's own Contingency Tables formula
+  for a true 2x2 table, and invariant to K — filtering a 2xK table down to just one category
+  reproduces the same OR, since OR only ever looks at the {reference, category} pair.
+- **Difference in proportions**: also numerically identical to jmv's formula for a true 2x2 table.
+- **Relative risk**: close to, but *not* numerically identical to, jmv's formula, even for a true
+  2x2 table — a ratio isn't invariant to the row+column swap that makes OR and DP match jmv
+  exactly, so this is an intrinsic mathematical difference, not a bug.
+- For genuine **2xK tables** (K > 2): relative risk and difference in proportions use each
+  compared group's **full row/column total** as the denominator (matching the "% within row/column"
+  reading from the frequency table), not just the reference+compared submatrix that OR uses — so,
+  unlike OR, they are not K-invariant, and in principle their sign could diverge from OR's if the
+  other K-2 categories skew the totals enough (a Simpson's-paradox-style effect, not a bug).
+
+The Comparative Measures table footnotes this convention on every row ("Reference is the first
+category, for rows and columns"; "Denominator is the row/column total" on the RR/DP cells).
+
 ## Installation (sideload)
 
 Prebuilt `.jmo` files are attached to the [Releases](../../releases) page, one release per
