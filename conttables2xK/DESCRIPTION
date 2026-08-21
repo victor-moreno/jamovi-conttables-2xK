@@ -1,7 +1,7 @@
 Package: conttables2xK
 Type: Package
 Title: Contingency Tables, with 2xK Comparative Measures
-Version: 1.1.0
+Version: 1.1.1
 Date: 2026-08-21
 Authors@R: c(person("Ravi", "Selker", role=c("aut", "cph")),
     person("Jonathon", "Love", role=c("aut", "cph"), email="jon@thon.cc"),

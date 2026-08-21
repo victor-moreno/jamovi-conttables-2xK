@@ -369,7 +369,6 @@ contTablesClass <- R6::R6Class(
             # reference (first) category, between the two compared groups
             oddsInfo <- private$.oddsInfo(data)
             compareLevels <- if (oddsInfo$available) oddsInfo$iterateLevels[-1] else '.'
-            oddsFootnote <- `if`(self$options$compare == 'rows', .('Rows compared'), .('Columns compared'))
 
             for (mat in mats) {
 
@@ -673,18 +672,24 @@ contTablesClass <- R6::R6Class(
                             `cil[rr]`=rrG$lower,
                             `ciu[rr]`=rrG$upper))
 
-                        odds$addFootnote(rowNo=oddsRowNo, 'v[dp]', oddsFootnote)
-                        odds$addFootnote(rowNo=oddsRowNo, 'v[rr]', oddsFootnote)
-
                         referenceFootnote <- .('Reference is the first category, for rows and columns')
                         odds$addFootnote(rowNo=oddsRowNo, 'v[dp]', referenceFootnote)
                         odds$addFootnote(rowNo=oddsRowNo, 'v[lo]', referenceFootnote)
                         odds$addFootnote(rowNo=oddsRowNo, 'v[o]', referenceFootnote)
                         odds$addFootnote(rowNo=oddsRowNo, 'v[rr]', referenceFootnote)
 
+                        # combined into one footnote (rather than two separate
+                        # ones) so it's always attached to exactly the same
+                        # cells (v[dp], v[rr]) as a single unit -- jamovi
+                        # assigns footnote letters by scanning visible columns
+                        # in order, so two footnotes attached to a differing
+                        # set of cells can end up interleaved with unrelated
+                        # footnotes (e.g. Haldane-Anscombe on v[lo]/v[o]) in a
+                        # way that looks like skipped letters when some
+                        # columns are hidden (diffProp/relRisk off)
                         denomFootnote <- `if`(self$options$compare == 'rows',
-                            .('Denominator is the row total'),
-                            .('Denominator is the column total'))
+                            .('Rows compared; denominator is the row total'),
+                            .('Columns compared; denominator is the column total'))
                         odds$addFootnote(rowNo=oddsRowNo, 'v[dp]', denomFootnote)
                         odds$addFootnote(rowNo=oddsRowNo, 'v[rr]', denomFootnote)
 
