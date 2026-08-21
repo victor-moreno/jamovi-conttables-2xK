@@ -1,8 +1,8 @@
 {
-  "name": "conttables2",
+  "name": "conttables2xK",
   "version": "0.1.0",
   "scripts": {
-    "prepublish": "mkdir -p conttables2 && jmc . --install-to conttables2"
+    "prepublish": "mkdir -p conttables2xK && jmc . --install-to conttables2xK"
   },
   "devDependencies": {
     "jamovi-compiler": "jamovi/jamovi-compiler"

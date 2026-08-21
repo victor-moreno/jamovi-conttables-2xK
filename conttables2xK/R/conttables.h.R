@@ -47,7 +47,7 @@ contTablesOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             hlresA = 2, ...) {
 
             super$initialize(
-                package="conttables2",
+                package="conttables2xK",
                 name="contTables",
                 requiresData=TRUE,
                 ...)
@@ -750,7 +750,7 @@ contTablesBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
     public = list(
         initialize = function(options, data=NULL, datasetId="", analysisId="", revision=0) {
             super$initialize(
-                package = "conttables2",
+                package = "conttables2xK",
                 name = "contTables",
                 version = c(1,0,0),
                 options = options,
@@ -777,7 +777,7 @@ contTablesBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' data('HairEyeColor')
 #' dat <- as.data.frame(HairEyeColor)
 #'
-#' conttables2::contTables(formula = Freq ~ Hair:Eye, dat)
+#' conttables2xK::contTables(formula = Freq ~ Hair:Eye, dat)
 #'
 #' #
 #' #  CONTINGENCY TABLES
@@ -806,7 +806,7 @@ contTablesBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' # Alternatively, omit the left of the formula (`Freq`) if each row
 #' # represents a single observation:
 #'
-#' conttables2::contTables(formula = ~ Hair:Eye, dat)
+#' conttables2xK::contTables(formula = ~ Hair:Eye, dat)
 #'
 #' @param data the data as a data frame
 #' @param rows the variable to use as the rows in the contingency table (not

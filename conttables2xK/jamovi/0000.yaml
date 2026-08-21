@@ -1,6 +1,6 @@
 ---
 title: Contingency Tables (2xK)
-name: conttables2
+name: conttables2xK
 version: 1.0.0
 jms: '1.0'
 authors:
@@ -18,7 +18,7 @@ description: >
 analyses:
   - title: Contingency Tables
     name: contTables
-    ns: conttables2
+    ns: conttables2xK
     menuGroup: Frequencies
     menuSubgroup: Contingency Tables
     menuTitle: Independent Samples (2xK)

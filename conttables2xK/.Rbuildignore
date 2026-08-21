@@ -7,6 +7,6 @@
 ^\.tmp$
 ^\.venv$
 ^\.envrc$
-^conttables2_[0-9.]+\.tar\.gz$
-^conttables2\.Rcheck$
-^conttables2_[0-9.]+\.jmo$
+^conttables2xK_[0-9.]+\.tar\.gz$
+^conttables2xK\.Rcheck$
+^conttables2xK_[0-9.]+\.jmo$

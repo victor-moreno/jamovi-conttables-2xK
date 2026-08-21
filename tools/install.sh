@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and install conttables2 into jamovi desktop and/or a running jamovi
+# Build and install conttables2xK into jamovi desktop and/or a running jamovi
 # Docker container.
 #
 #   bash install.sh              both targets, whichever are available
@@ -11,8 +11,8 @@ set -euo pipefail
 TARGET="${1:-both}"
 CONTAINER="${2:-jamovi}"
 
-HERE="$(cd "$(dirname "$0")/../conttables2" && pwd)"
-MODULE=conttables2
+HERE="$(cd "$(dirname "$0")/../conttables2xK" && pwd)"
+MODULE=conttables2xK
 VERSION="$(awk -F': *' '$1 == "Version" { print $2; exit }' "$HERE/DESCRIPTION")"
 ARTIFACT="$HERE/${MODULE}_${VERSION}.jmo"
 
@@ -31,7 +31,7 @@ install_desktop() {
   APP_R="$APP/Contents/Frameworks/R.framework/Versions/Current/Resources/bin/R"
   [ -x "$APP_R" ] || { echo "error: no R inside $APP" >&2; return 1; }
 
-  echo ">> desktop: building conttables2 for $ARCH using $PD"
+  echo ">> desktop: building conttables2xK for $ARCH using $PD"
   cd "$HERE"
 
   LOG="$(mktemp)"
@@ -86,7 +86,7 @@ install_docker() {
   # container and jmc tries to compile them.
   tar --no-mac-metadata --no-xattrs -C "$HERE" -cf - DESCRIPTION NAMESPACE R jamovi \
     | docker exec -i "$CONTAINER" sh -c \
-        'rm -rf /tmp/conttables2-src && mkdir -p /tmp/conttables2-src && tar -C /tmp/conttables2-src -xf -'
+        'rm -rf /tmp/conttables2xK-src && mkdir -p /tmp/conttables2xK-src && tar -C /tmp/conttables2xK-src -xf -'
 
   echo ">> docker: jmc --install"
   docker exec -i "$CONTAINER" bash -s <<'INCONTAINER'
@@ -96,14 +96,14 @@ RHOME="${R_HOME:-$(R RHOME 2>/dev/null || true)}"
 [ -n "$RHOME" ] || { echo "   error: no R in the container" >&2; exit 1; }
 RLIBS=/usr/lib/jamovi/modules/base/R
 
-jmc --install /tmp/conttables2-src \
+jmc --install /tmp/conttables2xK-src \
     --to /usr/lib/jamovi/modules \
     --rhome "$RHOME" \
     --rlibs "$RLIBS" \
     --patch-version --skip-deps
 
-[ -f /usr/lib/jamovi/modules/conttables2/jamovi.yaml ] || {
-  echo "   error: jmc did not install conttables2" >&2; exit 1; }
+[ -f /usr/lib/jamovi/modules/conttables2xK/jamovi.yaml ] || {
+  echo "   error: jmc did not install conttables2xK" >&2; exit 1; }
 INCONTAINER
 
   echo ">> docker: restarting $CONTAINER to load the module"
@@ -114,10 +114,10 @@ set -euo pipefail
 Rscript --vanilla -e '
     .libPaths(c(
         "/usr/lib/jamovi/modules/base/R",
-        "/usr/lib/jamovi/modules/conttables2/R",
+        "/usr/lib/jamovi/modules/conttables2xK/R",
         .libPaths()
     ))
-    library(conttables2)
+    library(conttables2xK)
 
     # 2x3 table: 2-level status (the compared groups) x 3-level dose (iterated)
     data <- data.frame(
@@ -136,7 +136,7 @@ Rscript --vanilla -e '
     cat(sprintf("   2xK comparative-measures smoke test passed (OR[med vs low] = %.3f)\n", odds[["v[o]"]][1]))
 '
 INCONTAINER
-  echo ">> docker: installed conttables2; open Frequencies > Contingency Tables > Independent Samples (2xK) to verify"
+  echo ">> docker: installed conttables2xK; open Frequencies > Contingency Tables > Independent Samples (2xK) to verify"
 }
 
 case "$TARGET" in

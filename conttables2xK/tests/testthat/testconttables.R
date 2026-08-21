@@ -11,7 +11,7 @@ testthat::test_that('All options in the contTables work (sunny)', {
         check.names = FALSE
     )
 
-    r <- conttables2::contTables(
+    r <- conttables2xK::contTables(
         data=df,
         rows="x 1",
         cols="y",
@@ -168,7 +168,7 @@ testthat::test_that('conttables works without counts', {
 
     data1 <- data.frame(x = x, y = y, z = z, w = w)
 
-    table1<- conttables2::contTables(data=data1, rows="x", cols="y")
+    table1<- conttables2xK::contTables(data=data1, rows="x", cols="y")
 
     freqs1 <- as.data.frame(table1$freqs)
 
@@ -177,7 +177,7 @@ testthat::test_that('conttables works without counts', {
     testthat::expect_equal(22, freqs1[2, '1[count]'])
     testthat::expect_equal(28, freqs1[2, '2[count]'])
 
-    table2 <- conttables2::contTables(data=data1, rows="x", cols="y", layers=c("z","w"))
+    table2 <- conttables2xK::contTables(data=data1, rows="x", cols="y", layers=c("z","w"))
 
     freqs2 <- as.data.frame(table2$freqs)
 
@@ -203,7 +203,7 @@ testthat::test_that("conttables works with counts", {
 
     data <- data.frame(rows = rows, cols = cols, layer = layer, counts = counts)
 
-    table <- conttables2::contTables(data=data, rows="rows", cols="cols", layers="layer", counts="counts", resU=TRUE, resP=TRUE, resS=TRUE, resA=TRUE)
+    table <- conttables2xK::contTables(data=data, rows="rows", cols="cols", layers="layer", counts="counts", resU=TRUE, resP=TRUE, resS=TRUE, resA=TRUE)
 
     freqs <- as.data.frame(table$freqs)
 
@@ -239,7 +239,7 @@ testthat::test_that("conttables works with global integer weights", {
     data <- data.frame(rows = rows, cols = cols, layer = layer)
     attr(data, "jmv-weights") <- counts
 
-    table <- conttables2::contTables(data=data, rows="rows", cols="cols", layers="layer")
+    table <- conttables2xK::contTables(data=data, rows="rows", cols="cols", layers="layer")
 
     freqs <- as.data.frame(table$freqs)
 
@@ -256,7 +256,7 @@ testthat::test_that("bar plots work with spaces in variable name", {
     data$dose <- factor(data$dose)
     names(data) <- c("len", "su pp", "do se")
 
-    table <- conttables2::contTables(data=data, rows="su pp", cols="do se", barplot=TRUE)
+    table <- conttables2xK::contTables(data=data, rows="su pp", cols="do se", barplot=TRUE)
 
     testthat::expect_true(table$barplot$.render())
 })
@@ -271,7 +271,7 @@ testthat::test_that("conttables rejects NA counts with a clear error", {
     # WHEN running contTables with a counts variable containing NA
     # THEN the analysis is rejected with a clear error message
     testthat::expect_error(
-        conttables2::contTables(data=data, rows="rows", cols="cols", counts="counts"),
+        conttables2xK::contTables(data=data, rows="rows", cols="cols", counts="counts"),
         regexp='missing values',
         ignore.case=TRUE
     )
@@ -285,7 +285,7 @@ testthat::test_that("generated syntax has an empty formula LHS without counts", 
     )
 
     # WHEN running the analysis
-    results <- conttables2::contTables(data=data, rows="dose", cols="supp")
+    results <- conttables2xK::contTables(data=data, rows="dose", cols="supp")
 
     # THEN the generated syntax has an empty formula left-hand side rather than
     #   a .COUNTS placeholder
@@ -301,7 +301,7 @@ testthat::test_that("generated syntax uses the counts variable as formula LHS", 
     )
 
     # WHEN running the analysis
-    results <- conttables2::contTables(data=data, rows="dose", cols="supp", counts="freq")
+    results <- conttables2xK::contTables(data=data, rows="dose", cols="supp", counts="freq")
 
     # THEN the counts variable appears as the formula's left-hand side
     testthat::expect_match(results$analysis$asSource(), "formula = freq ~ dose:supp", fixed=TRUE)
@@ -330,7 +330,7 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
         n      = c(50, 10, 40, 20, 30, 25)
     )
 
-    r <- conttables2::contTables(
+    r <- conttables2xK::contTables(
         data=data, rows="status", cols="dose", counts="n", compare="rows",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
 
@@ -353,7 +353,7 @@ testthat::test_that("2xK comparative measures expand to one row per non-referenc
 
     # compare="columns" is invalid here (dose has 3 levels, not 2, so it
     # can't be "the compared groups") -- single unavailable placeholder row
-    rBad <- conttables2::contTables(
+    rBad <- conttables2xK::contTables(
         data=data, rows="status", cols="dose", counts="n", compare="columns",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
     oddsBad <- rBad$odds$asDF
@@ -374,10 +374,10 @@ testthat::test_that("true 2x2 tables keep jmv's original DP/RR formula, OR unaff
         n      = c(50, 30, 10, 25)
     )
 
-    rRows <- conttables2::contTables(
+    rRows <- conttables2xK::contTables(
         data=data, rows="status", cols="dose", counts="n", compare="rows",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
-    rCols <- conttables2::contTables(
+    rCols <- conttables2xK::contTables(
         data=data, rows="status", cols="dose", counts="n", compare="columns",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
 
@@ -401,7 +401,7 @@ testthat::test_that("comparative measures stay unavailable for RxC tables where 
         n    = c(10,12,8, 9,11,13, 7,14,10)
     )
 
-    r <- conttables2::contTables(
+    r <- conttables2xK::contTables(
         data=data, rows="rows", cols="cols", counts="n",
         diffProp=TRUE, logOdds=TRUE, odds=TRUE, relRisk=TRUE)
 

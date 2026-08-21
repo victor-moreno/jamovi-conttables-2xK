@@ -24,7 +24,7 @@ description:
             data('HairEyeColor')
             dat <- as.data.frame(HairEyeColor)
 
-            conttables2::contTables(formula = Freq ~ Hair:Eye, dat)
+            conttables2xK::contTables(formula = Freq ~ Hair:Eye, dat)
 
             #
             #  CONTINGENCY TABLES
@@ -53,7 +53,7 @@ description:
             # Alternatively, omit the left of the formula (`Freq`) if each row
             # represents a single observation:
 
-            conttables2::contTables(formula = ~ Hair:Eye, dat)
+            conttables2xK::contTables(formula = ~ Hair:Eye, dat)
 
 completeWhenFilled: true
 

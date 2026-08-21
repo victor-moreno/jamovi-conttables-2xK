@@ -6,5 +6,5 @@
 *.zip
 *.tar
 *.tar.gz
-conttables2/*.jmo
+conttables2xK/*.jmo
 dist/
