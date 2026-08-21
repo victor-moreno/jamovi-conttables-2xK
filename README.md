@@ -10,8 +10,8 @@ is unchanged from jmv.
 Appears in jamovi's menu as **Frequencies > Contingency Tables > Independent Samples (2xK)**,
 alongside jmv's own "Independent Samples" entry.
 
-Built as a staging area for a future PR back to [jamovi/jmv](https://github.com/jamovi/jmv) — only
-`conttables2xK/R/contTables.b.R` differs in substance from jmv's own `conttables.b.R`.
+Built with minimal changes to [jamovi/jmv](https://github.com/jamovi/jmv) — only
+`conttables2xK/R/contTables.b.R` differs.
 
 ## Installation (sideload)
 
@@ -42,3 +42,4 @@ Then repackage for other jamovi/R versions and ship a release:
 bash tools/prepare-jmo.sh 4.6.0 all     # metadata-only repackage into dist/
 bash tools/release.sh 4.6.0             # + publish a GitHub release with those assets
 ```
+
