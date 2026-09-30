@@ -64,7 +64,8 @@ downloaded `.jmo`.
 ```
 bash tools/install.sh desktop   # builds conttables2xK/conttables2xK_<version>.jmo and installs it
                                  # into jamovi.app (macOS) using whichever R `Rscript` resolves to
-bash tools/install.sh docker    # same, into a running `jamovi` Docker container (needs jmc)
+bash tools/install.sh docker    # same, into a running jamovi >= 28.4 container, built
+                                 # with ../jamovi-src's compiler (nothing added to the image)
 bash tools/install.sh           # both, whichever are available
 ```
 
