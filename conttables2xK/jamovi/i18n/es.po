@@ -2792,7 +2792,7 @@ msgstr "Regresión logística"
 #: ttestOneS/results/ttest.columns.title
 #: ttestPS/results/ttest.columns.title
 msgid "Lower"
-msgstr "Más bajo"
+msgstr "Inferior"
 
 #: R/descriptives.b.R
 msgid "lower bound"
